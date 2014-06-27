@@ -1,6 +1,11 @@
 package engine
 
-import ()
+import (
+	"strconv"
+	"fmt"
+)
+
+var _ = fmt.Printf // debugging
 
 type Pair struct {
 	Data string
@@ -42,11 +47,17 @@ func cycle(curr []byte) string {
 	return string(append([]byte(cycle(curr[:len(curr)-1])), 'a'))
 }
 
+type urlData struct {
+	url string
+	hits int
+}
+
 type Urls struct {
 	AddUrl chan Pair
 	GetUrl chan Pair
+	GetStats chan Pair
 	// maps shortened urls to their full paths
-	urls map[string]string
+	urls map[string]*urlData
 	perm *permutation
 }
 
@@ -54,7 +65,8 @@ func NewUrls() *Urls {
 	return &Urls{
 		AddUrl: make(chan Pair),
 		GetUrl: make(chan Pair),
-		urls:   make(map[string]string),
+		GetStats: make(chan Pair),
+		urls:   make(map[string]*urlData),
 		perm:   newPermutation(),
 	}
 }
@@ -67,17 +79,27 @@ func (u *Urls) Run() {
 			// add to urls map
 			// a.Data is the url
 			p := u.perm.next()
-			u.urls[p] = a.Data
+			u.urls[p] = &urlData{url: a.Data}
 			a.Recv <- p
 		case g := <-u.GetUrl:
 			// get from urls map
 			// g.Data is the hashed url
 			// closes g.Recv if unsuccessful
-			if url, ok := u.urls[g.Data]; ok {
-				g.Recv <- url
+			if urldata, ok := u.urls[g.Data]; ok {
+				urldata.hits += 1
+				g.Recv <- urldata.url
 			} else {
 				close(g.Recv)
 			}
+		case s := <-u.GetStats:
+			// send to s.Recv
+			// close when finished
+			var str string
+			for k, v := range u.urls {
+				str = "shortened: " + k + " longened: " + v.url + " hits " + strconv.Itoa(v.hits) + "\n"
+				s.Recv <- str
+			}
+			close(s.Recv)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 var _ = fmt.Println // debugging
@@ -86,6 +87,19 @@ func urlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		c := make(chan string)
+		urls.GetStats <- engine.Pair{Recv: c}
+		var fullstring string
+		for s, ok := <-c; ok; s, ok = <-c {
+			fullstring += s
+		}
+		fullstring = strings.Replace(fullstring, "\n", "<br>", -1)
+		io.WriteString(w, "<!DOCTYPE html><html><body>" + fullstring + "</body></html>")
+	}
+}
+
 var urls *engine.Urls
 var address string
 
@@ -99,5 +113,6 @@ func ListenAndServe(ip string) {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/create_url", createUrlHandler)
 	http.HandleFunc("/url/", urlHandler)
+	http.HandleFunc("/stats", statsHandler)
 	http.ListenAndServe(ip, nil)
 }
