@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"strconv"
 	"fmt"
+	"strconv"
 )
 
 var _ = fmt.Printf // debugging
@@ -22,7 +22,7 @@ func newPermutation() *permutation {
 	return &permutation{
 		// current picked with dice roll
 		// guaranteed to be random
-		current: "zzz", 
+		current: "zzz",
 	}
 }
 
@@ -48,13 +48,13 @@ func cycle(curr []byte) string {
 }
 
 type urlData struct {
-	url string
+	url  string
 	hits int
 }
 
 type Urls struct {
-	AddUrl chan Pair
-	GetUrl chan Pair
+	AddUrl   chan Pair
+	GetUrl   chan Pair
 	GetStats chan Pair
 	// maps shortened urls to their full paths
 	urls map[string]*urlData
@@ -63,11 +63,11 @@ type Urls struct {
 
 func NewUrls() *Urls {
 	return &Urls{
-		AddUrl: make(chan Pair),
-		GetUrl: make(chan Pair),
+		AddUrl:   make(chan Pair),
+		GetUrl:   make(chan Pair),
 		GetStats: make(chan Pair),
-		urls:   make(map[string]*urlData),
-		perm:   newPermutation(),
+		urls:     make(map[string]*urlData),
+		perm:     newPermutation(),
 	}
 }
 

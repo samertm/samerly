@@ -63,7 +63,7 @@ func createUrlHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		c := make(chan string)
-		urls.AddUrl <- engine.Pair{form["longurl"][0], c}
+		urls.AddUrl <- engine.Pair{Data: form["longurl"][0], Recv: c}
 		shortened := <-c
 		io.WriteString(w,
 			"<!DOCTYPE html><html><body>shortened url: <a href='"+
@@ -80,7 +80,7 @@ func urlHandler(w http.ResponseWriter, r *http.Request) {
 		c := make(chan string)
 		urls.GetUrl <- engine.Pair{shortened, c}
 		if longurl, ok := <-c; ok {
-			http.Redirect(w, r, longurl, 301)
+			http.Redirect(w, r, longurl, 302)
 		} else {
 			io.WriteString(w, "<!DOCTYPE html><html><body>"+shortened+" does not exist ): I'M SO SORRY D:</body></html>")
 		}
