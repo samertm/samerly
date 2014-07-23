@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var _ = fmt.Printf // debugging
@@ -79,7 +80,12 @@ func (u *Urls) Run() {
 			// add to urls map
 			// a.Data is the url
 			p := u.perm.next()
-			u.urls[p] = &urlData{url: a.Data}
+			toAdd := a.Data
+			if !strings.HasPrefix(a.Data, "http://") &&
+				!strings.HasPrefix(a.Data, "https://") {
+				toAdd = "http://" + toAdd
+			}
+			u.urls[p] = &urlData{url: toAdd}
 			a.Recv <- p
 		case g := <-u.GetUrl:
 			// get from urls map
